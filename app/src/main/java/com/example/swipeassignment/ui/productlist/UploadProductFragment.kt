@@ -3,8 +3,10 @@ package com.example.swipeassignment.ui.productlist
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.swipeassignment.data.model.ProductResponse
 import com.example.swipeassignment.data.network.ProductApiService
 import com.example.swipeassignment.databinding.FragmentUploadProductBinding
+import com.google.gson.JsonParser
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -31,10 +34,12 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
+import java.io.FileOutputStream
 
 class UploadProductFragment : Fragment() {
 
     private lateinit var binding: FragmentUploadProductBinding
+
     private var selectedImageUri: Uri? = null
     private val IMAGE_PICK_CODE = 1000
     private val PERMISSION_REQUEST_CODE = 1001
@@ -56,9 +61,16 @@ class UploadProductFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding.selectImageButton.setOnClickListener { checkAndRequestPermissions() }
         binding.uploadButton.setOnClickListener { handleUploadButtonClick() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Check if network is available and upload saved products if data exists
+        if (isNetworkAvailable()) {
+            uploadSavedProducts()
+        }
     }
 
     private fun handleUploadButtonClick() {
@@ -75,7 +87,7 @@ class UploadProductFragment : Fragment() {
                 if (isConnected) {
                     uploadProduct(productName, productType, productPrice, productTax, selectedImageUri!!)
                 } else {
-                    showToast("No network available. Please check your connection.")
+                    saveProductLocally(productName, productType, productPrice, productTax, selectedImageUri!!)
                 }
             }
         } else {
@@ -104,23 +116,20 @@ class UploadProductFragment : Fragment() {
             binding.productImageView.setImageURI(selectedImageUri)
         }
     }
+
     private fun uploadProduct(productName: String, productType: String, price: String, tax: String, imageUri: Uri) {
         val imagePath = getRealPathFromURI(imageUri)
         val imageFile = File(imagePath)
 
         if (imageFile.exists()) {
-            // Create RequestBody for the image
             val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
             val imagePart = MultipartBody.Part.createFormData("files[]", imageFile.name, requestFile)
 
-
-            // Create RequestBody for other product details
             val namePart = createRequestBody(productName)
             val typePart = createRequestBody(productType)
             val pricePart = createRequestBody(price)
             val taxPart = createRequestBody(tax)
 
-            // Make the API call
             val call = apiService.addProduct(
                 namePart,
                 typePart,
@@ -132,20 +141,16 @@ class UploadProductFragment : Fragment() {
             call.enqueue(object : Callback<ProductResponse> {
                 override fun onResponse(call: Call<ProductResponse>, response: Response<ProductResponse>) {
                     if (response.isSuccessful) {
-                        // Successfully uploaded the product
                         val responseBody = response.body()
                         Log.d("UploadProduct", "Response Code: ${response.code()}")
                         Log.d("UploadProduct", "Response Body: $responseBody")
 
                         if (responseBody?.success == true) {
                             showToast("Uploaded successfully")
-                            Log.d("UploadProduct", "Product ID:")
-                            Log.d("UploadProduct", "Product Details:")
                         } else {
                             showToast("Error: ${responseBody?.message ?: "Unknown error"}")
                         }
                     } else {
-                        // Log the error response if not successful
                         Log.e("UploadProduct", "Error Response Code: ${response.code()}")
                         Log.e("UploadProduct", "Error Response: ${response.errorBody()?.string()}")
                         showToast("Error: ${response.message()}")
@@ -153,7 +158,6 @@ class UploadProductFragment : Fragment() {
                 }
 
                 override fun onFailure(call: Call<ProductResponse>, t: Throwable) {
-                    // Log failure details, e.g., network issues, server issues, etc.
                     Log.e("UploadProduct", "Request failed: ${t.localizedMessage}", t)
                     showToast("Error: ${t.localizedMessage}")
                 }
@@ -162,24 +166,115 @@ class UploadProductFragment : Fragment() {
             showToast("Image file not found")
         }
     }
+    private fun saveProductLocally(productName: String, productType: String, price: String, tax: String, imageUri: Uri) {
+        val sharedPreferences = requireContext().getSharedPreferences("ProductStorage", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+
+        // Save the image file path instead of URI
+        val imageFilePath = saveImageToAppStorage(imageUri)
+
+        // Save product details including the image path
+        val productJson = """
+        {
+            "productName": "$productName",
+            "productType": "$productType",
+            "price": "$price",
+            "tax": "$tax",
+            "imagePath": "$imageFilePath"
+        }
+    """
+        val uniqueKey = "product_${System.currentTimeMillis()}"
+        editor.putString(uniqueKey, productJson)
+        editor.apply()
+
+        showToast("Product saved locally for upload")
+    }
+
+    fun uploadSavedProducts() {
+        showToast("Uploading pending data")
+        val sharedPreferences = requireContext().getSharedPreferences("ProductStorage", Context.MODE_PRIVATE)
+        val allProducts = sharedPreferences.all
+
+        allProducts.forEach { entry ->
+            val productJson = entry.value.toString()
+
+            // Extract product data from JSON
+            val productName = extractProductName(productJson)
+            val productType = extractProductType(productJson)
+            val productPrice = extractProductPrice(productJson)
+            val productTax = extractProductTax(productJson)
+            val productImagePath = extractProductImagePath(productJson)
+
+            // Log the image path
+            Log.d("UploadProduct", "Extracted Image Path: $productImagePath")
+
+            if (productImagePath.isNotEmpty()) {
+                val productImageFile = File(productImagePath)
+                if (productImageFile.exists()) {
+                    uploadProduct(productName, productType, productPrice, productTax, Uri.fromFile(productImageFile))
+                } else {
+                    showToast("Image file not found at path: $productImagePath")
+                }
+            } else {
+                showToast("Invalid image path")
+            }
+
+            // Remove uploaded product from local storage
+            sharedPreferences.edit().remove(entry.key).apply()
+        }
+    }
 
 
+    private fun extractProductImagePath(json: String): String {
+        val jsonObject = JsonParser.parseString(json).asJsonObject
+        return jsonObject.get("imagePath")?.asString ?: ""
+    }
+
+
+    private fun extractProductName(json: String): String {
+        val jsonObject = JsonParser.parseString(json).asJsonObject
+        return jsonObject.get("productName")?.asString ?: "Unknown"
+    }
+
+    private fun extractProductType(json: String): String {
+        val jsonObject = JsonParser.parseString(json).asJsonObject
+        return jsonObject.get("productType")?.asString ?: "Unknown"
+    }
+
+    private fun extractProductPrice(json: String): String {
+        val jsonObject = JsonParser.parseString(json).asJsonObject
+        return jsonObject.get("price")?.asString ?: "0"
+    }
+
+    private fun extractProductTax(json: String): String {
+        val jsonObject = JsonParser.parseString(json).asJsonObject
+        return jsonObject.get("tax")?.asString ?: "0"
+    }
+
+    private fun extractProductImageUri(json: String): String {
+        val jsonObject = JsonParser.parseString(json).asJsonObject
+        return jsonObject.get("imageUri")?.asString ?: "unknownUri"
+    }
 
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkInfo = connectivityManager.activeNetworkInfo
-        return networkInfo != null && networkInfo.isConnected
+        val activeNetwork = connectivityManager.activeNetwork
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+        return networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    private fun getRealPathFromURI(uri: Uri): String {
-        val context = requireContext()
-        val inputStream = context.contentResolver.openInputStream(uri) ?: return ""
-        val file = File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg")
-        file.outputStream().use { output ->
-            inputStream.copyTo(output)
+    private fun getRealPathFromURI(uri: Uri): String? {
+        val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
+        cursor?.let {
+            val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            cursor.moveToFirst()
+            val filePath = cursor.getString(columnIndex)
+            cursor.close()
+            return filePath
         }
-        return file.absolutePath
+        return null
     }
+
 
     private fun createRequestBody(data: String): RequestBody {
         return data.toRequestBody("text/plain".toMediaTypeOrNull())
@@ -188,4 +283,23 @@ class UploadProductFragment : Fragment() {
     private fun showToast(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
+    private fun saveImageToAppStorage(uri: Uri): String {
+        val inputStream = requireContext().contentResolver.openInputStream(uri)
+        val file = File(requireContext().filesDir, "product_image_${System.currentTimeMillis()}.jpg")
+        val outputStream = FileOutputStream(file)
+
+        try {
+            inputStream?.copyTo(outputStream)
+            outputStream.close()
+            inputStream?.close()
+
+            Log.d("UploadProduct", "Image saved to: ${file.absolutePath}")
+            return file.absolutePath // Return the saved file path
+        } catch (e: Exception) {
+            Log.e("UploadProduct", "Error saving image: ${e.message}", e)
+            return "" // Return empty if saving fails
+        }
+    }
+
 }
+

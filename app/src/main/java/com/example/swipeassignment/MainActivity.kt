@@ -42,10 +42,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Check for internet and upload saved products if available
-        if (isNetworkAvailable()) {
-            val fragment = supportFragmentManager.findFragmentByTag("UploadProductFragment") as? UploadProductFragment
-//            fragment?.uploadSavedProducts() // Implement the uploadSavedProducts() method in your fragment
-        }
+//        if (isNetworkAvailable()) {
+//            // Get the current fragment in the ViewPager2
+//            val currentFragment = supportFragmentManager.findFragmentByTag("f${binding.viewPager.currentItem}")
+//            if (currentFragment is UploadProductFragment) {
+//                currentFragment.uploadSavedProducts()
+//            }
+//        }
     }
 
     // Using the modern ConnectivityManager API

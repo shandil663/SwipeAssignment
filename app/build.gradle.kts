@@ -71,7 +71,7 @@ dependencies {
 
     implementation("io.insert-koin:koin-android:3.3.0")
 
-
+    implementation ("com.google.code.gson:gson:2.8.8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
 
