@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <data>
         <variable
@@ -22,7 +23,7 @@
             android:maxLines="1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
+            app:layout_constraintTop_toTopOf="parent" />
 
         <EditText
             android:id="@+id/productType"
@@ -34,7 +35,7 @@
             android:maxLines="1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/productName"/>
+            app:layout_constraintTop_toBottomOf="@id/productName" />
 
         <EditText
             android:id="@+id/productPrice"
@@ -46,7 +47,7 @@
             android:maxLines="1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/productType"/>
+            app:layout_constraintTop_toBottomOf="@id/productType" />
 
         <EditText
             android:id="@+id/productTax"
@@ -58,7 +59,7 @@
             android:maxLines="1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/productPrice"/>
+            app:layout_constraintTop_toBottomOf="@id/productPrice" />
 
         <Button
             android:id="@+id/selectImageButton"
@@ -68,7 +69,7 @@
             android:text="Select Image"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/productTax"/>
+            app:layout_constraintTop_toBottomOf="@id/productTax" />
 
         <ImageView
             android:id="@+id/productImageView"
@@ -76,11 +77,11 @@
             android:layout_height="100dp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
-            android:src="@android:drawable/ic_menu_camera"
             android:contentDescription="Product Image"
+            android:src="@android:drawable/ic_menu_camera"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/selectImageButton"/>
+            app:layout_constraintTop_toBottomOf="@id/selectImageButton" />
 
         <Button
             android:id="@+id/uploadButton"
@@ -90,6 +91,18 @@
             android:text="Upload Product"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/productImageView"/>
+            app:layout_constraintTop_toBottomOf="@id/productImageView" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.785" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

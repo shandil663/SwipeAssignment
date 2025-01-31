@@ -7,8 +7,8 @@ import com.example.swipeassignment.ui.productlist.ProductListFragment
 import com.example.swipeassignment.ui.productlist.UploadProductFragment
 
 class FragmentAdapter(activity: AppCompatActivity) : FragmentStateAdapter(activity) {
-    private val fragmentList = mutableListOf<Fragment>()
-    private val titleList = mutableListOf<String>()
+    val fragmentList = mutableListOf<Fragment>()
+    val titleList = mutableListOf<String>()
 
     override fun getItemCount(): Int = fragmentList.size
 

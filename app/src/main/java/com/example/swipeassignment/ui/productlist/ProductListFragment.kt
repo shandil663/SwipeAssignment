@@ -32,17 +32,17 @@ class ProductListFragment : Fragment() {
         binding.productRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.productRecyclerView.adapter = productAdapter
 
+
         productViewModel.products.observe(viewLifecycleOwner) {
             productAdapter.updateProducts(it)
         }
 
+
         productViewModel.error.observe(viewLifecycleOwner) {
-            // Handle error case (e.g., show a Toast)
+
         }
 
-        productViewModel.fetchProducts()
 
-        // Set up SearchView listener
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
@@ -53,5 +53,14 @@ class ProductListFragment : Fragment() {
                 return true
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        productViewModel.fetchProducts()
+
+        productViewModel.products.observe(viewLifecycleOwner) {
+            productAdapter.updateProducts(it)
+        }
     }
 }

@@ -1,9 +1,7 @@
 package com.example.swipeassignment
 
-import android.net.ConnectivityManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.swipeassignment.ui.productlist.ProductListFragment
 import com.example.swipeassignment.ui.productlist.UploadProductFragment
@@ -22,6 +20,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         startKoin {
             androidContext(this@MainActivity)
             modules(appModule)
@@ -36,26 +35,6 @@ class MainActivity : AppCompatActivity() {
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.text = adapter.getTabTitle(position)
         }.attach()
-
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Check for internet and upload saved products if available
-//        if (isNetworkAvailable()) {
-//            // Get the current fragment in the ViewPager2
-//            val currentFragment = supportFragmentManager.findFragmentByTag("f${binding.viewPager.currentItem}")
-//            if (currentFragment is UploadProductFragment) {
-//                currentFragment.uploadSavedProducts()
-//            }
-//        }
-    }
-
-    // Using the modern ConnectivityManager API
-    private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        val activeNetwork = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
-        return capabilities != null && capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
 }
