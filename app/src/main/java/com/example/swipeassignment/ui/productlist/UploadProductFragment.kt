@@ -43,8 +43,7 @@ class UploadProductFragment : Fragment() {
     private var selectedImageUri: Uri? = null
     private val IMAGE_PICK_CODE = 1000
     private val PERMISSION_REQUEST_CODE = 1001
-    private var isUploading = false  // Flag to indicate whether the upload is in progress
-
+    private var isUploading = false
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://app.getswipe.in/api/public/")
         .addConverterFactory(GsonConverterFactory.create())
@@ -135,7 +134,7 @@ class UploadProductFragment : Fragment() {
         tax: String,
         imageUri: Uri?
     ) {
-        showProgressBar(true)  // Show progress bar during upload
+        showProgressBar(true)
 
         val namePart = createRequestBody(productName)
         val typePart = createRequestBody(productType)
@@ -162,17 +161,17 @@ class UploadProductFragment : Fragment() {
                 call: Call<ProductResponse>,
                 response: Response<ProductResponse>
             ) {
-                showProgressBar(false)  // Hide progress bar after upload
+                showProgressBar(false)
                 if (response.isSuccessful) {
                     showToast("Uploaded successfully")
-                    clearFields()  // Clear fields after successful upload
+                    clearFields()
                 } else {
                     showToast("Error: ${response.message()}")
                 }
             }
 
             override fun onFailure(call: Call<ProductResponse>, t: Throwable) {
-                showProgressBar(false)  // Hide progress bar on failure
+                showProgressBar(false)
                 showToast("Error: ${t.localizedMessage}")
             }
         })
@@ -219,7 +218,7 @@ class UploadProductFragment : Fragment() {
         editor.apply()
 
         showToast("Product saved locally for upload")
-        clearFields()  // Clear fields after saving locally
+        clearFields()
     }
 
     private fun uploadOfflineSavedProducts() {

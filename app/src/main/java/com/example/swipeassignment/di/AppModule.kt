@@ -11,7 +11,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 val appModule = module {
-    // Providing the Retrofit service
     single {
         Retrofit.Builder()
             .baseUrl("https://app.getswipe.in/api/public/")
@@ -23,9 +22,9 @@ val appModule = module {
             .create(ProductApiService::class.java)
     }
 
-    // Providing the ProductRepository
+
     single { ProductRepository(get()) }
 
-    // Providing the ProductViewModel
+
     viewModel { ProductViewModel(get()) }
 }

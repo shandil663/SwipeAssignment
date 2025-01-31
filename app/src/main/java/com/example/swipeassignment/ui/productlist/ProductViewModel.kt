@@ -25,7 +25,7 @@ class ProductViewModel(private val repository: ProductRepository) : ViewModel() 
     private val _uploadStatus = MutableLiveData<Boolean>()
     val uploadStatus: LiveData<Boolean> get() = _uploadStatus
 
-    private var allProducts = listOf<Product>()  // Store the full list of products
+    private var allProducts = listOf<Product>()
 
     fun fetchProducts() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -48,7 +48,7 @@ class ProductViewModel(private val repository: ProductRepository) : ViewModel() 
 
     fun filterProducts(query: String?) {
         val filteredList = if (query.isNullOrEmpty()) {
-            allProducts  // If query is empty, show all products
+            allProducts
         } else {
             allProducts.filter {
                 it.product_name.contains(query, ignoreCase = true) ||
