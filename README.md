@@ -41,7 +41,7 @@ JDK 8 or above
 
 Clone the Repository:
 Clone the repository to your local machine using the following command:
-git clone https://github.com/your-username/SwipeAssignment.git
+(https://github.com/shandil663/SwipeAssignment.git)
 
 Open the Project in Android Studio:
 Open Android Studio.
